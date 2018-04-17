@@ -4,7 +4,7 @@
 from configparser import ConfigParser
 
 class config():
-    config_path = "server/config.ini"
+    config_path = "config.ini"
     cfg = ConfigParser()
     cfg.read(config_path, "utf-8")
 
