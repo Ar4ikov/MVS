@@ -203,7 +203,7 @@ class api():
 
             if data.get("type") == "auth":
                 captcha = eval(requests.post("https://www.google.com/recaptcha/api/siteverify", params={
-                    "secret": "6Ld-dVMUAAAAADq6GRA2WhLUzvYW_MDOu17eX09J",
+                    "secret": config.getReCaptchaSecret(),
                     "response": data.get("g-recaptcha-response"),
                     "remoteip": request.remote_addr
                 }).text.replace("true", "True").replace("false", "False").replace("null", "None"))
