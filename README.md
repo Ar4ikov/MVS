@@ -26,7 +26,7 @@
 зависимые модули и библиотеки
 - flask (Ядро сервера)
 - requests (элемент запросов на другие сервера)
-- vk_advanced_api (для чат-бота ВК). [Посмотреть его можно тут.](https://github.com/Ar4ikov/vk_avdanced_api)
+- vk_advanced_api (для чат-бота ВК). [Посмотреть его можно тут.](https://github.com/Ar4ikov/vk_advanced_api)
 
 Следующий этап - конфигурация.
 Конфигурационный файл лежит в `/server/` и именуется как `config.ini`.
