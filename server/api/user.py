@@ -2,8 +2,8 @@
 # | Время: 13.04.2018 - 20:54
 
 from uuid import uuid4 as UUID
-from server.api.database import database
-from server.api.config import config
+from api.database import database
+from api.config import config
 
 class user():
     __slots__ = ["vk", "id", "mc", "hypixel_key", "banned"]

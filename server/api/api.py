@@ -4,12 +4,12 @@
 import flask, hashlib, requests
 from time import time
 from flask import request, render_template, session
-from server.api.user import user
-from server.api.errors import errors
-from server.api.scheme import json_scheme
-from server.api.hypixel_api import hypixel_api
-from server.api.access_token import access_token
-from server.api.config import config
+from api.user import user
+from api.errors import errors
+from api.scheme import json_scheme
+from api.hypixel_api import hypixel_api
+from api.access_token import access_token
+from api.config import config
 
 __version__ = "1.0.0"
 

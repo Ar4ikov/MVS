@@ -2,8 +2,8 @@
 # | Время: 16.04.2018 - 17:20
 
 from random import choice
-from server.api.database import database
-from server.api.config import config
+from api.database import database
+from api.config import config
 
 class access_token():
     __slots__ = ['date', 'script_name', 'ip', 'lenght', '_access_token', 'id']
