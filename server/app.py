@@ -1,6 +1,6 @@
 from flask import Flask
-from server.api import api
-from server.api.config import config
+from api import api
+from api.config import config
 
 # Run this file to start your personal MVS server
 #
