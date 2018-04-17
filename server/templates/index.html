@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="/static/images/icon.png" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/style.css" type="text/css">
+    <title>MVS Setting UP</title>
+</head>
+<body>
+    <form action="confirmSetup" method="post">
+        <div class="form-text" style="margin-top: -40px">
+            <p style="font-size: 22px">
+                <img src="/static/images/logo.png" alt="" width="40px"> Minecraft Verification System
+            </p>
+            Привет! Чтобы закончить настройку системы, необходимо создать аккаунт администратора.
+            Большинство запросов нуждается в работе с <i style="font-family: Calibri Light">`access_token`</i>, а значит админ
+            сможет управлять ими
+        </div>
+        <div class="form-data">
+            <input type="text" name=first_name" placeholder="Имя администратора" required>
+            <input type="text" name="username" placeholder="Логин администратора" required>
+            <input type="password" name="password" placeholder="Пароль администратора" required>
+            <input type="password" name="password-repeat" placeholder="Повтор пароля" required>
+            <input type="submit" class="submit" value="Завершить настройку" placeholder="Привет!">
+        </div>
+    </form>
+
+<!-- Диалоговые окна -->
+<div id="passwords-is-not-matches" class="modalDialog">
+	<div>
+		<a href="#close" title="Закрыть" class="close">х</a>
+		<h2>Пароли не совпадают</h2>
+	    <p>Проверьте правильность написания двух паролей и повторите попытку снова</p>
+    </div>
+</div>
+</body>
+</html>

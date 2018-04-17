@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>MVS - Admin Panel</title>
+    <link rel="shortcut icon" href="/static/images/icon.png" type="image/x-icon">
+    <meta name="viewport" content="initial-scale=1, minimum-scale=1, width=device-width, user-scalable=yes"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css" type="text/css">
+    <script type="text/javascript">
+        function removeItem(token) {
+            var a = token.id;
+            $.ajax({
+                    url: '/admin',
+                    type: "POST",
+                    data: "type=delete_token&id=" + a,
+                    cache: false,
+                    success: function () {
+                        window.location.reload(true);
+                    }
+                });
+        }
+    </script>
+</head>
+<header>
+    <img src="/static/images/logo.png" alt="" width="55px"> Minecraft Verification System | Панель управления
+    <a href="/logout" style="text-decoration: none; text-underline: none; color: #0e6f8f; position: absolute; right: 50px; top: 0">Выйти</a>
+</header>
+<body>
+    <div class="panel">
+        <a href="#create-new" class="create-new"><span style="font-size: 20px; margin-right: 10px;">+</span> Создать токен</a>
+        <a href="#" onclick="alert('Недоступно');" class="delete-all" aria-disabled="true"><span style="font-size: 20px; margin-right: 10px;">-</span> Удалить все</a>
+    </div>
+    <div class="content">
+        <table>
+            <tr>
+                <th>
+                    Access Token
+                </th>
+                <th>
+                    Время создания
+                </th>
+                <th>
+                    Имя приложения
+                </th>
+                <th>
+                    IP создателя
+                </th>
+                <th>
+                    Действия
+                </th>
+            </tr>
+                {{ access_tokens|safe }}
+        </table>
+    </div>
+
+<!-- Диалоговые окна -->
+<div id="create-new" class="modalDialog">
+	<div>
+		<a href="#close" title="Закрыть" class="close">х</a>
+		<h2>Создание токена</h2>
+	    <p>Создайте уникальный токен для своего официального приложения или бота!</p>
+        <form style="border: none; height: 200px; margin-top: 50px;" action="/admin" method="post">
+            <input type="text" name="script_name" placeholder="Название приложегия" required>
+            <input type="hidden" name="type" value="create_new">
+            <input type="submit" class="submit" value="Создать">
+        </form>
+    </div>
+</div>
+</body>
+<!--<footer>
+    <div class="footer-flex">
+        <div class="footer-item">
+            <h2>
+                О Проекте
+            </h2>
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Amet atque, dicta dolor eum eveniet maiores modi nesciunt nobis numquam quia quisquam quos temporibus voluptatem? Hic iusto laborum saepe unde velit!
+            </p>
+        </div>
+        <div class="footer-item">
+            <h2>
+                О нас
+            </h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Animi commodi cum delectus ducimus eaque eum hic id, illo incidunt iste nobis odit quas quidem, repellendus, sit veniam vitae. Ad, saepe.</p>
+        </div>
+        <div class="footer-item">
+            <h2>
+                Связь
+            </h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Exercitationem illum maiores maxime qui quia sit sunt. Aliquam, aperiam doloribus dolorum, ea, enim eos impedit maiores nulla obcaecati similique vel velit.</p>
+        </div>
+    </div>
+</footer>-->
+</html>

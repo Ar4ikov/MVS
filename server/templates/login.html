@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="/static/images/icon.png" type="image/x-icon">
+    <meta name="viewport" content="initial-scale=1, minimum-scale=1, width=device-width, user-scalable=yes"/>
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css" type="text/css">
+    <title>MVS - Log in to the system</title>
+</head>
+<body>
+    <form method="post">
+        <div class="form-text">
+            <p style="font-size: 22px">
+                <img src="/static/images/logo.png" alt="" width="40px"> Minecraft Verification System
+            </p>
+            Авторизируйтесь, чтобы управлять системой в админ-панеле!
+        </div>
+        <div style="margin-top: 30px;" class="form-data">
+            <input type="text" name="username" placeholder="Ваш логин" required>
+            <input type="password" name="password" placeholder="Ваш пароль" required>
+            <input type="hidden" name="type" value="auth">
+            <div class="g-recaptcha" data-sitekey="{{ recaptcha_secret }}"></div>
+            <input type="submit" class="submit" value="Войти">
+        </div>
+    </form>
+
+<!-- Диалоговые окна -->
+<div id="captcha-error" class="modalDialog">
+	<div>
+		<a href="#close" title="Закрыть" class="close">х</a>
+		<h2>Ошибка проверки reCaptcha</h2>
+		<p>Вы не прошли проверку на распознавание личности.</p>
+		<p>Пожалуйста, повторите попытку и снова попытайтесь войти в админ-панель.</p>
+	</div>
+</div>
+
+<div id="user-not-found" class="modalDialog">
+	<div>
+		<a href="#close" title="Закрыть" class="close">х</a>
+		<h2>Пользователь не найден.</h2>
+		<p>Данное имя пользователя не было найдено в базе данных. Проверьте правильность написания и повторите попытку.</p>
+	</div>
+</div>
+
+<div id="incorrect-password" class="modalDialog">
+	<div>
+		<a href="#close" title="Закрыть" class="close">х</a>
+		<h2>Неверный пароль</h2>
+		<p>Неправильный пароль для данного аккаунта. Проверьте состояние клавишы `CAPS-LOCK`, а также выбранный язык, проверьте правильность самого пароля и повторите попытку. </p>
+	</div>
+</div>
+</body>
+</html>

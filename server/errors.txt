@@ -1,0 +1,7 @@
+1 - Unknown Method
+2 - One of params is missing
+3 - This API Key is incorrect or invalid or expended a long moments ago
+4 - That user cannot be found.
+5 - You do not have permissions to call this method. Contact with administrator of the system to get permissions.
+6 - That user is already exist in Minecraft Verification System Database
+7 - That Access Token is invalid or have not created yet
