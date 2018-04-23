@@ -199,7 +199,7 @@ class api():
                                         access_tokens=self.generateAccessTokenTable())
 
             if not session.get("logged") and data.get("type") != "auth":
-                return render_template("/login.html", recaptcha_secret=config.getReCaptchaSecret())
+                return render_template("/login.html", recaptcha_secret=config.getReCaptchaPublic())
 
             if data.get("type") == "auth":
                 captcha = eval(requests.post("https://www.google.com/recaptcha/api/siteverify", params={
@@ -277,9 +277,9 @@ class api():
 
         Getting a user from database by `id` or `vk` or `mc`
 
-        :param id: - Id in database
-        :param vk: - VK Id
-        :param mc: - Minecraft UUID
+        :param id: Id in database
+        :param vk: VK Id
+        :param mc: Minecraft UUID
         :return: JSON with user info
         """
 

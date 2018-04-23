@@ -39,3 +39,7 @@ class config():
     @staticmethod
     def getReCaptchaSecret():
         return config.cfg.get("RECAPTCHA", "recaptcha_secret")
+
+    @staticmethod
+    def getReCaptchaPublic():
+        return config.cfg.get("RECAPTCHA", "recaptcha_public")
