@@ -6,7 +6,7 @@ from api.database import database
 from api.config import config
 
 class user():
-    __slots__ = ["vk", "id", "mc", "hypixel_key", "banned"]
+    __slots__ = ["vk", "id", "mc", "nickname", "hypixel_key", "banned"]
 
     db = database(config.getDatabaseName())
     if not db.getTable(config.getAccountsTableName()):
@@ -29,6 +29,11 @@ class user():
                        },
                        {
                            "type": "TEXT",
+                           "name": "nickname",
+                           "params": ""
+                       },
+                       {
+                           "type": "TEXT",
                            "name": "hypixel_key",
                            "params": ""
                        },
@@ -40,20 +45,22 @@ class user():
         except:
             pass
 
-    def __init__(self, vk, id, mc, hypixel_key, banned):
+    def __init__(self, vk, id, mc, nickname, hypixel_key, banned):
         """
 
         Main user class; user body
 
-        :param vk: - user VK
+        :param vk: user VK
         :param id: user id in database
         :param mc: user MC UUID
+        :param nickname: user nickname
         :param hypixel_key: user Hypixel API Key
         :param banned: boolean, if True, user has already banned in MVS, if False - has not banned yet.
         """
         self.vk = vk
         self.id = id
         self.mc = mc
+        self.nickname = nickname
         self.hypixel_key = hypixel_key
         self.banned = banned
 
@@ -65,6 +72,9 @@ class user():
 
     def getMC(self) -> str:
         return self.mc
+
+    def getNickName(self) -> str:
+        return self.nickname
 
     def getKey(self) -> str:
         return self.hypixel_key
@@ -94,7 +104,7 @@ class user():
         if not response:
             return None
         else:
-            return user(id=response[0], vk=response[1], mc=response[2], hypixel_key=response[3], banned=response[4])
+            return user(id=response[0], vk=response[1], mc=response[2], nickname=response[3], hypixel_key=response[4], banned=response[5])
 
     @staticmethod
     def getUsers() -> list:
@@ -107,22 +117,23 @@ class user():
         users = user.db.getTable(config.getAccountsTableName())
         players = []
         for player in users:
-            players.append(user(id=player[0], vk=player[1], mc=player[2], hypixel_key=player[3], banned=player[4]))
+            players.append(user(id=player[0], vk=player[1], mc=player[2], nickname=player[3], hypixel_key=player[4], banned=player[5]))
 
         return players
 
     @staticmethod
-    def createUser(vk, mc, hypixel_key):
+    def createUser(vk, mc, nickname, hypixel_key):
         """
 
         Creating user
 
         :param vk: - user VK
         :param mc: - user MC UUID
+        :param nickname: user nickname
         :param hypixel_key: - Hypixel API Key
         :return: - class user
         """
         if user.db.getValueFromTable(config.getAccountsTableName(), vk=vk) or user.db.getValueFromTable(config.getAccountsTableName(), mc=mc):
             return None
-        user.db.addRow(config.getAccountsTableName(), "{last_id}", vk, mc, hypixel_key, False)
-        return user(id=user.db.getLastId(config.getAccountsTableName())-1, vk=vk, mc=mc, hypixel_key=hypixel_key, banned=False)
+        user.db.addRow(config.getAccountsTableName(), "{last_id}", vk, mc, nickname, hypixel_key, False)
+        return user(id=user.db.getLastId(config.getAccountsTableName())-1, vk=vk, mc=mc, nickname=nickname, hypixel_key=hypixel_key, banned=False)

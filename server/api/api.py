@@ -267,6 +267,7 @@ class api():
                 "id": player.getId(),
                 "vk": player.getVK(),
                 "mc": player.getMC(),
+                "nickname": player.getNickName(),
                 "is_banned": player.isBanned()
             })
 
@@ -291,6 +292,7 @@ class api():
             "id": usercls.getId(),
             "vk": usercls.getVK(),
             "mc": usercls.getMC(),
+            "nickname": usercls.getNickName(),
             "is_banned": usercls.isBanned()
         }
 
@@ -307,8 +309,9 @@ class api():
         response = self.confirmUser(hypixel_key)
         if response:
             uuid = response.get('ownerUuid')
+            nickname = response.get('nickname')
 
-            usercls = user.createUser(vk=vk, mc=uuid, hypixel_key=hypixel_key)
+            usercls = user.createUser(vk=vk, mc=uuid, nickname=nickname, hypixel_key=hypixel_key)
             if not usercls:
                 return False
 
@@ -316,6 +319,7 @@ class api():
                 "id": usercls.getId(),
                 "vk": usercls.getVK(),
                 "mc": usercls.getMC(),
+                "nickname": usercls.getNickName(),
                 "is_banned": usercls.isBanned()
             }
         else:
@@ -335,7 +339,8 @@ class api():
         if not response.getStatus():
             return False
         else:
-            return {'hypixel_key': hypixel_key, 'ownerUuid': response.getResponse().get("record").get('ownerUuid')}
+            nickname = hypixel.request("player", uuid=response.getResponse().get("record").get('ownerUuid')).getResponse()["player"].get("displayname")
+            return {'nickname': nickname,'hypixel_key': hypixel_key, 'ownerUuid': response.getResponse().get("record").get('ownerUuid')}
 
     def generateAccessTokenTable(self):
         """
