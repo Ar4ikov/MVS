@@ -5,3 +5,6 @@
 5 - You do not have permissions to call this method. Contact with administrator of the system to get permissions.
 6 - That user is already exist in Minecraft Verification System Database
 7 - That Access Token is invalid or have not created yet
+8 - Please, verify your identity to continue (send valid `access_token` or `hypixel_key`)
+9 - This user has already banned.
+10 - This user hasn't banned yet.

@@ -4,48 +4,24 @@
 from uuid import uuid4 as UUID
 from api.database import database
 from api.config import config
+import requests
 
 class user():
-    __slots__ = ["vk", "id", "mc", "nickname", "hypixel_key", "banned"]
+    __slots__ = ["vk", "id", "mc", "nickname", "confirmation_type", "hypixel_key", "banned"]
 
     db = database(config.getDatabaseName())
-    if not db.getTable(config.getAccountsTableName()):
-        try:
-            db.createTable(config.getAccountsTableName(),
-                       {
-                           "type": "INTEGER",
-                           "name": "Id",
-                           "params": "PRIMARY KEY"
-                       },
-                       {
-                           "type": "INTEGER",
-                           "name": "vk",
-                           "params": ""
-                       },
-                       {
-                           "type": "TEXT",
-                           "name": "mc",
-                           "params": ""
-                       },
-                       {
-                           "type": "TEXT",
-                           "name": "nickname",
-                           "params": ""
-                       },
-                       {
-                           "type": "TEXT",
-                           "name": "hypixel_key",
-                           "params": ""
-                       },
-                       {
-                           "type": "BOOLEAN",
-                           "name": "banned",
-                           "params": ""
-                       })
-        except:
-            pass
+    db.getCursor().execute("CREATE TABLE IF NOT EXISTS accounts "
+                           "(id INTEGER PRIMARY KEY, "
+                           "vk INTEGER  NOT NULL, "
+                           "mc TEXT  NOT NULL, "
+                           "nickname TEXT  NOT NULL, "
+                           "confirmation_type TEXT NOT NULL, "
+                           "hypixel_key TEXT  NOT NULL, "
+                           "banned BOOLEAN  NOT NULL"
+                           ")")
+    db.getConnection().commit()
 
-    def __init__(self, vk, id, mc, nickname, hypixel_key, banned):
+    def __init__(self, vk, id, mc, nickname, confirmation_type, hypixel_key, banned):
         """
 
         Main user class; user body
@@ -61,6 +37,7 @@ class user():
         self.id = id
         self.mc = mc
         self.nickname = nickname
+        self.confirmation_type = confirmation_type
         self.hypixel_key = hypixel_key
         self.banned = banned
 
@@ -76,6 +53,9 @@ class user():
     def getNickName(self) -> str:
         return self.nickname
 
+    def getConfirmationType(self) -> str:
+        return self.confirmation_type
+
     def getKey(self) -> str:
         return self.hypixel_key
 
@@ -83,7 +63,22 @@ class user():
         return self.banned
 
     @staticmethod
-    def getUser(vk=None, id=None, mc=None):
+    def getResponse(id=None, vk=None, mc=None, nickname=None):
+        response = None
+        if id:
+            response = user.db.getValueFromTable(config.getAccountsTableName(), id=id)
+        elif vk:
+            response = user.db.getValueFromTable(config.getAccountsTableName(), vk=vk)
+        elif nickname:
+            response = user.db.getValueFromTable(config.getAccountsTableName(), nickname=nickname)
+        else:
+            response = user.db.getValueFromTable(config.getAccountsTableName(), mc=mc)
+
+        print(response)
+        return response
+
+    @staticmethod
+    def getUser(vk=None, id=None, mc=None, nickname=None):
         """
 
         Getting user from database
@@ -93,18 +88,13 @@ class user():
         :param mc: - user MC UUID
         :return: None if user was not found or main user class -> `user` if it was found
         """
-        response = None
-        if id:
-            response = user.db.getValueFromTable(config.getAccountsTableName(), id=id)
-        elif vk:
-            response = user.db.getValueFromTable(config.getAccountsTableName(), vk=vk)
-        else:
-            response = user.db.getValueFromTable(config.getAccountsTableName(), mc=mc)
+        print(vk, id, mc, nickname)
+        response = user.getResponse(id, vk, mc, nickname)
 
         if not response:
             return None
         else:
-            return user(id=response[0], vk=response[1], mc=response[2], nickname=response[3], hypixel_key=response[4], banned=response[5])
+            return user(id=response[0], vk=response[1], mc=response[2], nickname=response[3], confirmation_type=response[4], hypixel_key=response[5], banned=response[6])
 
     @staticmethod
     def getUsers() -> list:
@@ -117,12 +107,27 @@ class user():
         users = user.db.getTable(config.getAccountsTableName())
         players = []
         for player in users:
-            players.append(user(id=player[0], vk=player[1], mc=player[2], nickname=player[3], hypixel_key=player[4], banned=player[5]))
+            players.append(user(id=player[0], vk=player[1], mc=player[2], nickname=player[3], confirmation_type=player[4], hypixel_key=player[5], banned=player[6]))
 
         return players
 
     @staticmethod
-    def createUser(vk, mc, nickname, hypixel_key):
+    def updateNickname(id=None, vk=None, mc=None, nickname=None):
+        response = user.getResponse(id, vk, mc, nickname)
+
+        if not response:
+            return None
+
+        names = [eval(x) for x in requests.get("https://api.mojang.com/user/profiles/{}/names".format(response[2])).text.replace("[", "").replace("]", "").split(", ")]
+
+        new_nickname = names[-1]
+        user.db.getCursor().execute("UPDATE `{}` SET nickname='{}' WHERE mc='{}'".format(config.getAccountsTableName(), new_nickname["name"], response[2]))
+        user.db.getConnection().commit()
+
+        return {"new_nickname": new_nickname}
+
+    @staticmethod
+    def createUser(vk, mc, nickname, hypixel_key, confirmation_type):
         """
 
         Creating user
@@ -133,7 +138,69 @@ class user():
         :param hypixel_key: - Hypixel API Key
         :return: - class user
         """
+
         if user.db.getValueFromTable(config.getAccountsTableName(), vk=vk) or user.db.getValueFromTable(config.getAccountsTableName(), mc=mc):
             return None
-        user.db.addRow(config.getAccountsTableName(), "{last_id}", vk, mc, nickname, hypixel_key, False)
-        return user(id=user.db.getLastId(config.getAccountsTableName())-1, vk=vk, mc=mc, nickname=nickname, hypixel_key=hypixel_key, banned=False)
+        user.db.getCursor().execute("""INSERT INTO `{}` (vk, mc, nickname, confirmation_type, hypixel_key, banned) 
+                                VALUES ('{}', '{}', '{}', '{}', '{}', '{}')""".format(
+            config.getAccountsTableName(), vk, mc, nickname, confirmation_type, hypixel_key, False
+        ))
+        user.db.getConnection().commit()
+
+        return user(id=user.db.getLastId(config.getAccountsTableName())-1, vk=vk, mc=mc, nickname=nickname, confirmation_type=confirmation_type, hypixel_key=hypixel_key, banned=False)
+
+    @staticmethod
+    def banUser(id, vk, mc, nickname):
+        """
+
+        Ban user in MVS
+
+        :param id: user Id in MVS
+        :param vk: user VK
+        :param mc: user MC UUID
+        :param nickname: user MC Nickname
+        :return: boolean True or None
+        """
+
+        response = user.getResponse(id, vk, mc, nickname)
+
+        if not response:
+            return None
+
+        if response[6] == "True":
+            return False
+
+        user.db.getCursor().execute("""UPDATE `{}` SET banned='{}' WHERE mc='{}'""".format(
+            config.getAccountsTableName(), True, response[2]
+        ))
+        user.db.getConnection().commit()
+
+        return True
+
+    @staticmethod
+    def unbanUser(id, vk, mc, nickname):
+        """
+
+        Unban user in MVS
+
+        :param id: user Id in MVS
+        :param vk: user VK
+        :param mc: user MC UUID
+        :param nickname: user MC Nickname
+        :return: boolean True or None
+        """
+
+        response = user.getResponse(id, vk, mc, nickname)
+
+        if not response:
+            return None
+
+        if response[6] == "False":
+            return False
+
+        user.db.getCursor().execute("""UPDATE `{}` SET banned='{}' WHERE mc='{}'""".format(
+            config.getAccountsTableName(), False, response[2]
+        ))
+        user.db.getConnection().commit()
+
+        return True

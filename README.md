@@ -53,7 +53,7 @@
 настроив заранее в конфиге ключ для нее. 
 
 > [Подробнее о рекапче прочтите тут.](https://www.google.com/recaptcha/)
-   
+
 Далее мы попадаем на страницу с админ-панелью
 
 ![hey3](docs/admin_panel.png "Админ-панель")
@@ -73,11 +73,15 @@
 Основные методы системы
 
 Метод   | Зачем и как работает
----------|-----------
-getUser | Получение юзера из MVS БД. Необходимо указать или `mvs id (id)`, или `vk`, или `mc`
+---------|:----------
+getUser | Получение юзера из MVS БД. Необходимо указать или `mvs id (id)`, или `vk`, или `mc`, или `nickname`
 getUsers | Получение всех юзеров их MVS
 createUser | Создание нового пользователя. Принимает `vk`, `hypixel_key` и `access_token`
 confirmUser | Принимает `hypixel_key`, нужен для проверки подлинности `hypixel_key`
+updateNickname | Принимает или `mvs id (id)`, или `vk`, или `mc`, или `nickname`, а также особый способ подтверждения (`hypixel_key` юзера или `access_token` приложения). Обновляет ник в базе данных, сверяясь с Mojang API
+banUser | Бан пользователя в системе. Принимает или `mvs id (id)`, или `vk`, или `mc`, или `nickname`, а также `access_token` приложения 
+unbanUser | Бан пользователя в системе. Принимает или `mvs id (id)`, или `vk`, или `mc`, или `nickname`, а также `access_token` приложения 
+
 
 На этом, пожалуй, с серверной частью и её настройкой мы закончили.
 
@@ -88,6 +92,7 @@ confirmUser | Принимает `hypixel_key`, нужен для проверк
 id | Id юзера в системе MVS
 vk | Id юзера ВК
 mc | UUID пользователя Minecraft
+nickname | Ник игрока Minecraft
 hypixel_key | Hypixel API Key
 access_token | Access Token приложения
 
@@ -96,27 +101,36 @@ access_token | Access Token приложения
 `getUser` при удачном запросе
 ```json
 {
-  "response": {
-    "user": {'id': "mvs_id", 'vk': "vk_id", 'is_banned': False, 'mc': "mc_uuid"}
-  }, 
-  "status": "success"
+  	"response": {
+    	"user": {
+            "id": "mvs_id",
+            "vk": "vk_id",
+            "nickname": "nickname",
+            "confirmation_type": "confirm_type",
+            "is_banned": False,
+            "mc": "mc_uuid"
+    	}
+  	}, 
+  	"status": "success"
 }
 ```
 
 `getUsers`
 ```json
 {
-  "response": {
-    "users": [
-      {
-        "id": 1, 
-        "is_banned": "False", 
-        "mc": "aa0f6b98a6b4438d96a0388d22d8e326", 
-        "vk": 160213445
-      }
-    ]
-  }, 
-  "status": "success"
+  	"response": {
+    	"users": [
+      		{
+                "id": 1, 
+                "is_banned": "False", 
+                "mc": "aa0f6b98a6b4438d96a0388d22d8e326", 
+                "vk": 160213445,
+                "nickname": "nickname",
+                "confirmation_type": "confirm_type"
+      		}
+    	]
+  	}, 
+  	"status": "success"
 }
 
 ```
@@ -124,10 +138,17 @@ access_token | Access Token приложения
 `createUser` при удачном запросе
 ```json
 {
-  "response": {
-    "user": {'id': "mvs_id", 'vk': "vk_id", 'is_banned': False, 'mc': "mc_uuid"}
-  }, 
-  "status": "success"
+  	"response": {
+    	"user": {
+            "id": "mvs_id",
+            "vk": "vk_id",
+            "nickname": "nickname",
+            "confirmation_type": "confirm_type",
+            "is_banned": False,
+            "mc": "mc_uuid"
+            }
+      }, 
+      "status": "success"
 }
 
 ```
@@ -136,15 +157,41 @@ access_token | Access Token приложения
 `confirmUser`
 ```json
 {
+    "response": {
+        "key_info": {
+            "hypixel_key": "hypixel_key", 
+            "ownerUuid": "mc_uuid",
+            "confirmation_type": "confirm_type",
+            "nickname": "nickname"
+    	}
+  	}, 
+  	"status": "success"
+}
+```
+
+updateNickname при удачном запросе
+
+```json
+{
   "response": {
-    "hypixel_key": {
-      "hypixel_key": "hypixel_key", 
-      "ownerUuid": "mc_uuid"
+    "new_nickname": {
+      "name": "NewNickName1337"
     }
   }, 
   "status": "success"
 }
 ```
+
+banUser или unbanUser при удачном запросе
+
+```json
+{
+  "response": {}, 
+  "status": "success"
+}
+```
+
+
 
 Список возвращаемых ошибок вы можете узреть в `/server/errors.txt`
 
@@ -203,7 +250,7 @@ print(response)
 `getCause` | Получение причины ошибки в ответе. Если ошибки нет, вернет None
 `getResponseBody` | Вернет полный ответ сервера в формате JSON
 
- 
+
 На этом закончим с клиентской частью
 
 ВК Бот

@@ -43,3 +43,37 @@ class config():
     @staticmethod
     def getReCaptchaPublic():
         return config.cfg.get("RECAPTCHA", "recaptcha_public")
+
+    # External Auth
+    # --------------------
+
+    @staticmethod
+    def getEABool() -> bool:
+        if config.cfg.get("Auth", "external_authorization") == "True":
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def getEAHost():
+        return config.cfg.get("Auth", "ea_host")
+
+    @staticmethod
+    def getEAPort():
+        return config.cfg.get("Auth", "ea_port")
+
+    @staticmethod
+    def getEALogin():
+        return config.cfg.get("Auth", "ea_login")
+
+    @staticmethod
+    def getEAPassword():
+        return config.cfg.get("Auth", "ea_password")
+
+    @staticmethod
+    def getEADatabase():
+        return config.cfg.get("Auth", "ea_database")
+
+    @staticmethod
+    def getEATable():
+        return config.cfg.get("Auth", "ea_table")

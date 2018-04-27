@@ -42,3 +42,15 @@ class errors(Exception):
     @staticmethod
     def INVALID_ACCESS_TOKEN():
         return error(7, "That Access Token is invalid or have not created yet")
+
+    @staticmethod
+    def VERIFY_IDENTITY():
+        return error(8, "Please, verify your identity to continue (send valid `access_token` or `hypixel_key`)")
+
+    @staticmethod
+    def ALREADY_BANNED():
+        return error(9, "This user has already banned.")
+
+    @staticmethod
+    def NOT_BANNED_YET():
+        return error(10, "This user hasn't banned yet.")

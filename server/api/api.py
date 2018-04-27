@@ -10,8 +10,9 @@ from api.scheme import json_scheme
 from api.hypixel_api import hypixel_api
 from api.access_token import access_token
 from api.config import config
+from api.custom_database import custom_database
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 class api():
     def __init__(self, app: flask.Flask, host="localhost", port=80):
@@ -65,34 +66,48 @@ class api():
                 if password != password_repeat:
                     return '<meta http-equiv="refresh" content="0; url=/#passwords-is-not-matches" />'
 
-                user.db.createTable(config.getAdminsTableName(),
-                                    {
-                                        "type": "INTEGER",
-                                        "name": "id",
-                                        "params": "PRIMARY KEY"
-                                    },
-                                    {
-                                        "type": "TEXT",
-                                        "name": "username",
-                                        "params": ""
-                                    },
-                                    {
-                                        "type": "TEXT",
-                                        "name": "password",
-                                        "params": ""
-                                    },
-                                    {
-                                        "type": "TEXT",
-                                        "name": "first_name",
-                                        "params": ""
-                                    }
-                                    )
+                user.db.getCursor().execute("""CREATE TABLE IF NOT EXISTS admin 
+                            (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                            username TEXT  NOT NULL, 
+                            password TEXT  NOT NULL, 
+                            first_name TEXT  NOT NULL
+                            )""")
+                user.db.getConnection().commit()
 
-                user.db.addRow(config.getAdminsTableName(), "{last_id}", username, password, first_name)
+                user.db.getCursor().execute("""INSERT INTO `{}` (username, password, first_name)
+                                  VALUES ('{}', '{}', '{}')""".format(
+                    config.getAdminsTableName(), username, password, first_name
+                ))
+                user.db.getConnection().commit()
 
                 return '<meta http-equiv="refresh" content="0; url=/" />'
             else:
                 return json_scheme.createError(errors.UNKNOWN_METHOD(request.path[1:])), 404
+
+        @app.route("/updateNickname", methods=["GET", "POST"])
+        def updateNicknameCommand():
+            if request.method == "GET":
+                data = request.args
+            else:
+                data = request.form
+
+            if len([x for x in data.keys()]) == 0:
+                return json_scheme.createError(errors.MISSED_PARAMS())
+
+            atv = access_token.checkValid(data.get("access_token"))
+            if not atv and not data.get('hypixel_key'):
+                return json_scheme.createError(errors.VERIFY_IDENTITY())
+
+            player = user.getUser(id=data.get("id"), vk=data.get("vk"), mc=data.get("mc"), nickname=data.get("nickname"))
+            if not player:
+                return json_scheme.createError(errors.USER_NOT_FOUND())
+
+            if player.getKey() != data.get("hypixel_key"):
+                return json_scheme.createError(errors.INCORRECT_KEY())
+
+            response = user.updateNickname(data.get("id"), data.get("vk"), data.get("mc"), data.get("nickname"))
+
+            return json_scheme.createResponse(new_nickname=response["new_nickname"])
 
         @app.route("/createUser", methods=['GET', 'POST'])
         def createUserCommand():
@@ -108,11 +123,8 @@ class api():
             else:
                 data = request.form
 
-            if len([x for x in data.keys()]) < 2:
+            if len([x for x in data.keys()]) < 2 or not data.get("vk"):
                 return json_scheme.createError(errors.MISSED_PARAMS())
-
-            if not access_token.checkValid(data.get("access_token")):
-                return json_scheme.createError(errors.INVALID_ACCESS_TOKEN())
 
             response = self.createUser(data.get('vk'), data.get('hypixel_key'))
             if response == None:
@@ -126,6 +138,50 @@ class api():
         @app.route("/getUsers", methods=['GET', 'POST'])
         def getUsersCommand():
             return json_scheme.createResponse(users=self.getUsers())
+
+        @app.route("/banUser", methods=["GET", "POST"])
+        def banUserCommand():
+            if request.method == "GET":
+                data = request.args
+            else:
+                data = request.form
+
+            if len([x for x in data.keys()]) < 2 and data.get("access_token"):
+                return json_scheme.createError(errors.MISSED_PARAMS())
+
+            if not access_token.checkValid(data.get("access_token")):
+                return json_scheme.createError(errors.INVALID_ACCESS_TOKEN())
+
+            response = user.banUser(data.get('id'), data.get('vk'), data.get('mc'), data.get("nickname"))
+            if response is None:
+                return json_scheme.createError(errors.USER_NOT_FOUND())
+
+            if not response:
+                return json_scheme.createError(errors.ALREADY_BANNED())
+
+            return json_scheme.createResponse()
+
+        @app.route("/unbanUser", methods=["GET", "POST"])
+        def unbanUserCommand():
+            if request.method == "GET":
+                data = request.args
+            else:
+                data = request.form
+
+            if len([x for x in data.keys()]) < 2 and data.get("access_token"):
+                return json_scheme.createError(errors.MISSED_PARAMS())
+
+            if not access_token.checkValid(data.get("access_token")):
+                return json_scheme.createError(errors.INVALID_ACCESS_TOKEN())
+
+            response = user.unbanUser(data.get('id'), data.get('vk'), data.get('mc'), data.get("nickname"))
+            if response is None:
+                return json_scheme.createError(errors.USER_NOT_FOUND())
+
+            if not response:
+                return json_scheme.createError(errors.NOT_BANNED_YET())
+
+            return json_scheme.createResponse()
 
         @app.route("/getUser", methods=['GET', 'POST'])
         def getUserCommand():
@@ -143,7 +199,7 @@ class api():
             if len([x for x in data.keys()]) == 0:
                 return json_scheme.createError(errors.MISSED_PARAMS())
 
-            user = self.getUser(data.get('id'), data.get('vk'), data.get('mc'))
+            user = self.getUser(data.get('id'), data.get('vk'), data.get('mc'), data.get("nickname"))
             if not user:
                 return json_scheme.createError(errors.USER_NOT_FOUND())
 
@@ -165,7 +221,7 @@ class api():
             if len([x for x in data.keys()]) == 0:
                 return json_scheme.createError(errors.MISSED_PARAMS())
 
-            return json_scheme.createResponse(hypixel_key=self.confirmUser(data.get('hypixel_key')))
+            return json_scheme.createResponse(key_info=str(self.confirmUser(data.get('hypixel_key'))))
 
         @app.route('/admin', methods=['GET', 'POST'])
         def admin():
@@ -268,12 +324,13 @@ class api():
                 "vk": player.getVK(),
                 "mc": player.getMC(),
                 "nickname": player.getNickName(),
+                "confirmation_type": player.getConfirmationType(),
                 "is_banned": player.isBanned()
             })
 
         return users
 
-    def getUser(self, id, vk, mc):
+    def getUser(self, id, vk, mc, nickname):
         """
 
         Getting a user from database by `id` or `vk` or `mc`
@@ -284,7 +341,7 @@ class api():
         :return: JSON with user info
         """
 
-        usercls =  user.getUser(id=id, vk=vk, mc=mc)
+        usercls =  user.getUser(id=id, vk=vk, mc=mc, nickname=nickname)
         if not usercls:
             return None
 
@@ -293,6 +350,7 @@ class api():
             "vk": usercls.getVK(),
             "mc": usercls.getMC(),
             "nickname": usercls.getNickName(),
+            "confirmation_type": usercls.getConfirmationType(),
             "is_banned": usercls.isBanned()
         }
 
@@ -310,8 +368,9 @@ class api():
         if response:
             uuid = response.get('ownerUuid')
             nickname = response.get('nickname')
+            confirmation_type = response.get("confirmation_type")
 
-            usercls = user.createUser(vk=vk, mc=uuid, nickname=nickname, hypixel_key=hypixel_key)
+            usercls = user.createUser(vk=vk, mc=uuid, nickname=nickname, confirmation_type=confirmation_type, hypixel_key=hypixel_key)
             if not usercls:
                 return False
 
@@ -320,6 +379,7 @@ class api():
                 "vk": usercls.getVK(),
                 "mc": usercls.getMC(),
                 "nickname": usercls.getNickName(),
+                "confirmation_type": usercls.getConfirmationType(),
                 "is_banned": usercls.isBanned()
             }
         else:
@@ -333,6 +393,23 @@ class api():
         :param hypixel_key: - Hypixel API Key
         :return: JSON with `hypixel_key` and `ownerUuid` for `mc`
         """
+        if config.getEABool():
+            mysql = custom_database()
+
+            request = mysql.getRow(access_token=hypixel_key)
+            if not request:
+                hypixel = hypixel_api("https://api.hypixel.net", hypixel_key)
+                response = hypixel.request("key")
+                if not response.getStatus():
+                    return False
+                else:
+                    nickname = hypixel.request("player", uuid=response.getResponse().get("record").get('ownerUuid')).getResponse()[
+                        "player"].get("displayname")
+                    return {'confirmation_type': 'hypixel_key', 'nickname': nickname, 'hypixel_key': hypixel_key,
+                            'ownerUuid': response.getResponse().get("record").get('ownerUuid')}
+            else:
+                return {'confirmation_type': 'mvs_auth', 'nickname': request[4], 'hypixel_key': request[2],
+                        'ownerUuid': request[1]}
 
         hypixel = hypixel_api("https://api.hypixel.net", hypixel_key)
         response = hypixel.request("key")
@@ -340,7 +417,7 @@ class api():
             return False
         else:
             nickname = hypixel.request("player", uuid=response.getResponse().get("record").get('ownerUuid')).getResponse()["player"].get("displayname")
-            return {'nickname': nickname,'hypixel_key': hypixel_key, 'ownerUuid': response.getResponse().get("record").get('ownerUuid')}
+            return {'confirmation_type': 'hypixel_key', 'nickname': nickname,'hypixel_key': hypixel_key, 'ownerUuid': response.getResponse().get("record").get('ownerUuid')}
 
     def generateAccessTokenTable(self):
         """

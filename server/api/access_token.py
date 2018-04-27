@@ -9,41 +9,15 @@ class access_token():
     __slots__ = ['date', 'script_name', 'ip', 'lenght', '_access_token', 'id']
 
     db = database(config.getDatabaseName())
-    if not db.getTable(config.getAccessTokensTableName()):
-        try:
-            db.createTable(config.getAccessTokensTableName(),
-                           {
-                               "type": "INTEGER",
-                               "name": "id",
-                               "params": "PRIMARY KEY"
-                           },
-                           {
-                               "type": "TEXT",
-                               "name": "access_token",
-                               "params": ""
-                           },
-                           {
-                               "type": "INTEGER",
-                               "name": "lenght",
-                               "params": ""
-                           },
-                           {
-                               "type": "TEXT",
-                               "name": "script_name",
-                               "params": ""
-                           },
-                           {
-                               "type": "INTEGER",
-                               "name": "date",
-                               "params": ""
-                           },
-                           {
-                               "type": "TEXT",
-                               "name": "ip",
-                               "params": ""
-                           })
-        except:
-            pass
+    db.getCursor().execute("""CREATE TABLE IF NOT EXISTS access_tokens 
+                        (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                        access_token TEXT  NOT NULL, 
+                        lenght INTEGER  NOT NULL, 
+                        script_name TEXT  NOT NULL, 
+                        date INTEGER  NOT NULL, 
+                        ip TEXT  NOT NULL
+                        )""")
+    db.getConnection().commit()
 
     def __init__(self, id, date, script_name, _access_token, ip, lenght=64):
         """
@@ -139,7 +113,11 @@ class access_token():
         :return:
         """
         token = access_token.generateFromMatrix(lenght)
-        access_token.db.addRow(config.getAccessTokensTableName(), "{last_id}", token, lenght, script_name, date, ip)
+        access_token.db.getConnection().execute("""INSERT INTO `{}` (access_token, lenght, script_name, date, ip) 
+                                        VALUES ('{}', '{}', '{}', '{}', '{}')""".format(
+            config.getAccessTokensTableName(), token, lenght, script_name, date, ip
+        ))
+        access_token.db.getConnection().commit()
         return access_token(id=access_token.db.getLastId(config.getAccessTokensTableName())-1, _access_token=token, lenght=lenght, script_name=script_name, date=date, ip=ip)
 
     @staticmethod
