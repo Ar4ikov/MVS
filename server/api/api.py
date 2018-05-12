@@ -102,7 +102,7 @@ class api():
             if not player:
                 return json_scheme.createError(errors.USER_NOT_FOUND())
 
-            if player.getKey() != data.get("hypixel_key"):
+            if not atv and player.getKey() != data.get("hypixel_key"):
                 return json_scheme.createError(errors.INCORRECT_KEY())
 
             response = user.updateNickname(data.get("id"), data.get("vk"), data.get("mc"), data.get("nickname"))
