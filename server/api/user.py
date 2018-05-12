@@ -120,6 +120,14 @@ class user():
 
         names = [eval(x) for x in requests.get("https://api.mojang.com/user/profiles/{}/names".format(response[2])).text.replace("[", "").replace("]", "").split(", ")]
 
+        new_names = []
+        if type(names[0]) == tuple:
+            for name in names[0]:
+                new_names.append(name)
+
+        print(new_names)
+        if type(names[0]) == tuple:
+            names = new_names
         new_nickname = names[-1]
         user.db.getCursor().execute("UPDATE `{}` SET nickname='{}' WHERE mc='{}'".format(config.getAccountsTableName(), new_nickname["name"], response[2]))
         user.db.getConnection().commit()
